@@ -1,21 +1,85 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import movieApi from "../../common/apis/movieApi";
+import { APIKey } from "../../common/apis/MovieApiKey";
+
+export const fetchAsyncMovies = createAsyncThunk(
+  "movies/fetchAsyncMovies",
+  async () => {
+    const movieText = "Harry";
+    const response = await movieApi.get(
+      `?apiKey=${APIKey}&s=${movieText}&type=movie`
+    );
+
+    return response.data;
+  }
+);
+
+export const fetchAsyncShows = createAsyncThunk(
+  "movies/fetchAsyncShows",
+  async () => {
+    const seriesText = "Friends";
+    const response = await movieApi.get(
+      `?apiKey=${APIKey}&s=${seriesText}&type=series`
+    );
+    console.log(response.data)
+    return response.data;
+  }
+);
+
+export const fetchAsyncMovieOrShowDetail = createAsyncThunk(
+  "movies/fetchAsyncMovieOrShowDetail",
+  async (id) => {
+    console.log("id", id)
+    const response = await movieApi.get(
+      `?apiKey=${APIKey}&i=${id}&Plot=full`
+    );
+    console.log("response",response.data)
+    return response.data;
+  }
+);
 
 
 const initialState = {
-    movies: {}, 
-}
+  movies: {},
+  shows: {},
+  selectedMovieOrShow: {}
+};
 
 const movieSlice = createSlice({
-    name: "movies",
-    initialState,
-    reducers: {
-        addMovies: (state, { payload }) => {
-            state.movies = payload;
-        }
+  name: "movies",
+  initialState,
+  reducers: {
+    removeSelectedMovieOrShow: (state) => {
+      state.selectedMovieOrShow = {};
     },
-    extraReducers: {}
-})
+  },
+  extraReducers: {
+    [fetchAsyncMovies.pending]: () => {
+      console.log("Pending");
+    },
+    [fetchAsyncMovies.fulfilled]: (state, { payload }) => {
+      console.log("Fetched succesfully");
+      return { ...state, movies: payload };
+    },
+    [fetchAsyncMovies.rejected]: () => {
+      console.log("Rejected");
+    },
 
-export const {addMovies} = movieSlice.actions;
-export const getAllMovies = (state) => state.movies.movies
+    [fetchAsyncShows.fulfilled]: (state, { payload }) => {
+        console.log("Fetched shows succesfully", state);
+        return { ...state, shows: payload };
+      },
+
+    [fetchAsyncMovieOrShowDetail.fulfilled]: (state, { payload }) => {
+        console.log("Fetched shows and eventsuccesfully", state);
+        return { ...state, selectedMovieOrShow: payload };
+      },
+  },
+});
+
+export const { removeSelectedMovieOrShow } = movieSlice.actions;
+export const getAllMovies = (state) => state.movies.movies;
+export const getAllShows = (state) => state.movies.shows;
+export const getSelectedMovieOrShow = (state) => state.movies.selectedMovieOrShow;
+
 export default movieSlice.reducer;
